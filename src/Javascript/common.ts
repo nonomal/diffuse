@@ -6,19 +6,15 @@
 import * as localforage from "localforage"
 
 
-export const APP_INFO = {
-  creator: "icidasset",
-  name: "Diffuse"
-}
+// 🌳
 
 
-export const ODD_CONFIG = {
-  namespace: APP_INFO,
-  permissions: {
-    app: APP_INFO,
-    fs: { public: [ { directory: [ "Apps", APP_INFO.creator, APP_INFO.name ] } ] }
-  },
-  debug: true,
+export type CoverPrep = {
+  cacheKey: string
+  trackFilename: string
+  trackPath: string
+  trackSourceId: string
+  variousArtists: string
 }
 
 
@@ -65,7 +61,6 @@ export function mimeType(fileExt: string): string | undefined {
     case "m4a": return "audio/mp4";
     case "flac": return "audio/flac";
     case "ogg": return "audio/ogg";
-    case "opus": return "audio/opus";
     case "wav": return "audio/wave";
     case "webm": return "audio/webm";
   }

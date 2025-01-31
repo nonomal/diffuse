@@ -20,18 +20,15 @@ This layer connects to the services on which your music is stored, no data is wr
 - [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
 - [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
 - [Dropbox](https://dropbox.com/)
-- [Google Drive](https://drive.google.com/)
 - [IPFS](https://ipfs.io/) <small>(supports DNSLink & IPNS)</small>
 - [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
 
 
 ### User layer
 
-This layer will use a single service on which to store your data. Your data being your settings, favourites, playlists, etc. You can choose between these services:
+This (optional) layer will use a single service on which to store your data externally. Your data being your settings, favourites, playlists, etc. You can choose between these services:
 
 - [Dropbox](https://www.dropbox.com/)
-- [Fission](https://fission.codes/)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) <small>(Browser)</small>
 - [IPFS](https://ipfs.io/) <small>(using MFS)</small>
 - [RemoteStorage](https://remotestorage.io/)
 
