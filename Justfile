@@ -65,7 +65,7 @@ check-versions:
 	{{NPM_DIR}}/.bin/tailwind \
 		--input {{SRC_DIR}}/Css/Application.css \
 		--output {{BUILD_DIR}}/application.css \
-		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Applications/UI/**/*.elm,{{SRC_DIR}}/Applications/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.ts" \
+		--content "{{SRC_DIR}}/Static/Html/**/*.*,{{SRC_DIR}}/Core/Themes/**/*.elm,{{SRC_DIR}}/Core/UI/**/*.elm,{{SRC_DIR}}/Core/UI.elm,{{SRC_DIR}}/Library/**/*.elm,{{SRC_DIR}}/Javascript/**/*.ts" \
 		--config {{SYSTEM_DIR}}/Css/Tailwind.js \
 		--postcss {{SYSTEM_DIR}}/Css/PostCSS.js \
 		--jit \
@@ -74,14 +74,14 @@ check-versions:
 
 @elm:
 	echo "> Compiling Elm application"
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js
 
 
 @elm-prod:
 	echo "> Compiling Elm application (optimised)"
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
-	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Applications/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/Brain.elm --output {{BUILD_DIR}}/js/brain.elm.js --optimize
+	{{NPM_DIR}}/.bin/elm make {{SRC_DIR}}/Core/UI.elm --output {{BUILD_DIR}}/js/ui.elm.js --optimize
 
 	{{NPM_DIR}}/.bin/esbuild {{BUILD_DIR}}/js/brain.elm.js \
 		--minify --outfile={{BUILD_DIR}}/js/brain.elm.tmp.js
@@ -112,13 +112,17 @@ js:
 		--outdir={{BUILD_DIR}}/js/brain/ \
 		--splitting \
 		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
-		--inject:./system/Js/node-shims.js
+		--inject:./system/Js/node-shims.js \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 	# Main
-	{{ESBUILD}} ./src/Javascript/index.ts \
+	{{ESBUILD}} ./src/Javascript/UI/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
-		--splitting
+		--splitting \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 
 js-prod:
@@ -141,14 +145,18 @@ js-prod:
 		--splitting \
 		--minify \
 		--alias:brain.elm.js={{BUILD_DIR}}/js/brain.elm.js \
-		--inject:./system/Js/node-shims.js
+		--inject:./system/Js/node-shims.js \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 	# Main
-	{{ESBUILD}} ./src/Javascript/index.ts \
+	{{ESBUILD}} ./src/Javascript/UI/index.ts \
 		--outdir={{BUILD_DIR}}/js/ui/ \
 		--define:BUILD_TIMESTAMP=$build_timestamp \
 		--splitting \
-		--minify
+		--minify \
+		--alias:node:buffer=buffer/ \
+		--alias:node:stream=stream
 
 
 @license:
@@ -180,11 +188,17 @@ js-prod:
 	)
 
 
-@elm-housekeeping:
-	echo "> Running elm-format"
-	{{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
-	echo "> Running elm-review"
-	{{ELM_REVIEW}} --fix-all
+@elm-format:
+  echo "> Running elm-format"
+  {{NPM_DIR}}/.bin/elm-format {{SRC_DIR}} --yes
+
+
+@elm-housekeeping: elm-format elm-review
+
+
+@elm-review:
+  echo "> Running elm-review"
+  {{ELM_REVIEW}} --fix-all
 
 
 @quality: check-versions
@@ -212,7 +226,7 @@ js-prod:
 
 
 @watch-elm:
-	watchexec -p -w {{SRC_DIR}} -e elm -- just elm css
+	watchexec -p -w {{SRC_DIR}} -e elm -- just elm js css
 
 
 @watch-js:
@@ -220,4 +234,4 @@ js-prod:
 
 
 @watch-system:
-	watchexec -p --ignore *.elm --ignore *.js --ignore *.ts --ignore *.css -- just system js
+	watchexec -p --ignore *.elm --ignore *.js --ignore *.ts --ignore *.css --ignore src-tauri/** -- just system js

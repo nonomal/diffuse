@@ -9,18 +9,16 @@
 //
 /// <reference lib="webworker" />
 
-import { } from "../index.d"
-
 
 const KEY =
-  /* eslint-disable no-undef */
+  /* eslint-disable no-undef *//* @ts-ignore */
   `diffuse-${BUILD_TIMESTAMP}`
 
 
 const EXCLUDE =
   [ "_headers"
-    , "_redirects"
-    , "CORS"
+  , "_redirects"
+  , "CORS"
   ]
 
 
@@ -39,7 +37,7 @@ let googleDriveToken
 // 📣
 
 
-self.addEventListener("activate", _event => {
+self.addEventListener("activate", () => {
   // Remove all caches except the one with the currently used `KEY`
   caches.keys().then(keys => {
     keys.forEach(k => {
@@ -58,7 +56,9 @@ self.addEventListener("install", event => {
   const promise = fetch("tree.json")
     .then(response => response.json())
     .then(tree => {
-      const filteredTree = tree.filter(t => !EXCLUDE.find(u => u === t))
+      const filteredTree = tree
+        .filter(t => !EXCLUDE.find(u => u === t))
+        .filter(u => u.endsWith(".jpg"))
       const whatToCache = [ href, `${href.replace(/\/+$/, "")}/about/` ].concat(filteredTree)
       return caches.open(KEY).then(c => Promise.all(whatToCache.map(x => c.add(x))))
     })
@@ -67,7 +67,9 @@ self.addEventListener("install", event => {
 })
 
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", fetchEvent => {
+  const event = fetchEvent as FetchEvent
+
   const isInternal =
     !!event.request.url.match(new RegExp("^" + self.location.origin))
 
@@ -82,21 +84,18 @@ self.addEventListener("fetch", event => {
       })()
     )
 
-    // When doing a request with basic authentication in the url, put it in the headers instead
-  } else if (event.request.url.includes("service_worker_authentication=")) {
+  // When doing a request with basic authentication in the url, put it in the headers instead
+  } else if (event.request.url.includes("basic_auth=")) {
     const url = new URL(event.request.url)
-    const token = url.searchParams.get("service_worker_authentication")
+    const token = url.searchParams.get("basic_auth")
 
-    url.searchParams.delete("service_worker_authentication")
-    url.search = "?" + url.searchParams.toString()
-
-    newRequestWithAuth(
-      event,
+    event.respondWith(newRequestWithAuth(
+      event.request,
       url.toString(),
       "Basic " + token
-    )
+    ))
 
-    // When doing a request with access token in the url, put it in the headers instead
+  // When doing a request with access token in the url, put it in the headers instead
   } else if (event.request.url.includes("bearer_token=")) {
     const url = new URL(event.request.url)
     const token = url.searchParams.get("bearer_token")
@@ -106,13 +105,13 @@ self.addEventListener("fetch", event => {
     url.searchParams.delete("bearer_token")
     url.search = "?" + url.searchParams.toString()
 
-    newRequestWithAuth(
-      event,
+    event.respondWith(newRequestWithAuth(
+      event.request,
       url.toString(),
       "Bearer " + token
-    )
+    ))
 
-    // Use cache if internal request and not using native app
+  // Use cache if internal request and not using native app
   } else if (isInternal) {
     event.respondWith(
       isNativeWrapper
@@ -122,15 +121,15 @@ self.addEventListener("fetch", event => {
 
   } else if (event.request.url && event.request.url.startsWith(GOOGLE_DRIVE) && event.request.url.includes("alt=media")) {
     // For some reason Safari starts using the non bearer-token URL while playing audio
-    googleDriveToken
-      ? newRequestWithAuth(
-        event,
-        event.request.url.toString(),
-        "Bearer " + googleDriveToken
-      )
-      : event.respondWith(
-        network(event)
-      )
+    event.respondWith(
+      googleDriveToken
+        ? newRequestWithAuth(
+          event.request,
+          event.request.url.toString(),
+          "Bearer " + googleDriveToken
+        )
+        : network(event)
+    )
 
   }
 })
@@ -163,49 +162,21 @@ addEventListener("message", event => {
 // ⚗️
 
 
-function newRequestWithAuth(event, urlWithoutToken, authToken) {
-  const request = event.request
-  const newHeaders = Object.fromEntries(
-    request.headers.entries()
-  )
+function newRequestWithAuth(request: Request, newUrl: string, authToken: string): Promise<Response> {
+  const newHeaders = new Headers(request.headers)
+  newHeaders.append("authorization", authToken)
 
-  newHeaders[ "authorization" ] = authToken
+  const newRequest = new Request(request, { headers: newHeaders })
 
-  const newRequest = new Request(
-    new Request(urlWithoutToken, event.request),
-    {
-      headers: newHeaders,
-      credentials: request.credentials,
-      cache: request.cache,
-      method: request.method,
-      mode: request.mode,
-      redirect: request.redirect,
-      referrer: request.referrer,
-    }
-  )
-
-  let retries = 0
-
-  // TODO: When request fails because access token is expired,
-  //       refresh the token, and retry the request.
-  const makeFetch = () => fetch(newRequest).then(r => {
+  const makeFetch = () => fetch(newRequest).then(async r => {
     if (r.ok) {
-      retries = 0
       return r
     } else {
       return r.text().then(text => {
         throw new Error(text)
       })
     }
-  }).catch(err => {
-    // Safari keeps getting weird CORS errors from Google Drive, after some time they disappear 🤷‍♂️
-    retries++
-    if (retries <= 1000) return new Promise((resolve, reject) => setTimeout(makeFetch().then(resolve, reject), 1000))
-    else throw new Error(err)
-
   })
 
-  event.respondWith(
-    makeFetch()
-  )
+  return makeFetch()
 }

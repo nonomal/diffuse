@@ -21,61 +21,30 @@ You can find the CORS configuration editor under the "Permissions" tab, on the S
 [
     {
         "AllowedHeaders": [
-            "Range"
+            "Range",
+            "X-Playback-Session-Id"
         ],
         "AllowedMethods": [
             "GET",
             "HEAD"
         ],
         "AllowedOrigins": [
-            "*"
+            "https://diffuse.sh",
+            "http://127.0.0.1:44999"
         ],
         "ExposeHeaders": [
+            "Accept-Ranges",
             "Content-Length",
-            "Content-Type"
+            "Content-Range"
         ],
         "MaxAgeSeconds": 31536000
     }
 ]
 ```
 
-<div id="CORS__BTFS" />
-
-#### BTFS
-
-Add the domain of the app, with the protocol, to the __list of allowed origins__.
-
-```shell
-btfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["https://diffuse.sh", "http://diffuse.sh.ipns.localhost:8080", "http://127.0.0.1:44999"]'
-```
-
-You can also make this change in the Web UI, you'll find it under "Settings → BTFS Config".
-
-```javascript
-{
-  "API": {
-    "HTTPHeaders": {
-      "Access-Control-Allow-Origin": [
-        ...                                         // Default BTFS values
-
-        "https://diffuse.sh",                       // 🎵 Default
-        "http://diffuse.sh.ipns.localhost:8080",    // IPNS
-        "http://127.0.0.1:44999"                    // Electron app
-      ]
-    }
-  }
-}
-```
-
 <div id="CORS__Dropbox" />
 
 #### Dropbox
-
-_Not necessary._
-
-<div id="CORS__Google-Drive" />
-
-#### Google Drive
 
 _Not necessary._
 
@@ -117,8 +86,8 @@ Then fill in the following in the input boxes (left to right):
 ```
 ALLOWED ORIGINS       *
 ALLOWED METHODS       GET, HEAD
-ALLOWED HEADERS       Range
-EXPOSED HEADERS       Content-Length, Content-Range
+ALLOWED HEADERS       Range, X-Playback-Session-Id
+EXPOSED HEADERS       Accept-Ranges, Content-Length, Content-Range
 MAX AGE               0
 ```
 
@@ -136,9 +105,8 @@ cors:
 
   allowed_headers:
     - Authorization
-    - Content-Type
     - Depth
-    - Range
+    - X-Playback-Session-Id
   allowed_methods:
     - GET
     - HEAD
@@ -147,6 +115,7 @@ cors:
     - https://diffuse.sh
     - http://127.0.0.1:44999
   exposed_headers:
+    - Accept-Ranges
     - Content-Length
-    - Content-Type
+    - Content-Range
 ```

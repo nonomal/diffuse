@@ -1,9 +1,27 @@
 # Changelog
 
+## 3.5.0
+
+- **Improve audio playback, processing and error handling**.
+- **Added collections, an alternative to playlists**. Tracks can only appear once in a collection and cannot be ordered.
+- **Basic setup for themes**.
+- **Deprecated Google Drive support**. Google Drive sources can still be used, but no longer added through the UI.
+- Removed BTFS support.
+- No longer resets shuffle history when the collection or search changes.
+- WebDAV improvements.
+- Command palette improvements.
+- Directory playlists now work correctly with sources that specify a sub directory.
+- Fixed issue with missing extensions when downloading playlists.
+- Removed Fission/Webnative user layer (discontinued).
+- Minor improvements/fixes to the artwork downloading process.
+- Added keyboard shortcuts to seek back and forward.
+- No longer cache all background images when first loading the app.
+- A lot of javascript code refactoring.
+
+
 ## 3.4.0
 
-- **Improved audio metadata parsing**. Now uses [mediainfo.js](https://github.com/buzz/mediainfo.js).
-- **Removed native builds.** I no longer want to maintain native builds for Diffuse. I personally use it straight in the browser or install it as a PWA. Alternatively, there's software like [Multi](https://github.com/kofigumbs/multi) that allow you to package web applications into native apps. There are icons in the [src](/src/Static/Images) folder that you can use as the app icon.
+- **Improved audio metadata parsing**.
 - Adjusted search behaviour, now searches while typing (with a small delay).
 - Allows you to make playlists public when using Fission/ODD SDK.
 - Fixes issue with Safari where reloading after a search caused the loader to be shown indefinitely.
